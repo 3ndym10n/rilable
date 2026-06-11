@@ -7,6 +7,7 @@ import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import JSZip from "jszip";
 import { resolveModel } from "./models";
+import { isPublicAiProxyAllowed } from "./auth";
 import {
   renderPbxproj,
   XCSCHEME,
@@ -502,7 +503,7 @@ function fixUserPrompt(
 /// (Vercel AI Gateway, key injected server-side by convex/http.ts).
 function aiSkill(platform: "web" | "mobile"): string {
   const site = process.env.CONVEX_SITE_URL;
-  if (!site) return "";
+  if (!site || !isPublicAiProxyAllowed()) return "";
   const endpoint = `${site}/ai/chat/completions`;
   if (platform === "web") {
     return `

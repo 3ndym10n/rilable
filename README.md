@@ -44,15 +44,18 @@ Prefer to do it by hand? `CLAUDE.md` reads just as well for humans.
 
 ## Keys you'll need
 
-Anthropic (required) · Daytona (web builds) · Chorus (mobile builds) · OpenAI (voice,
-optional) · Vercel AI Gateway (AI-powered generated apps, optional). All keys live as Convex
+Anthropic (required) · Daytona (web builds) · Rilable access token (recommended before adding real keys) · Chorus (mobile builds) · OpenAI (voice,
+optional) · Vercel AI Gateway (AI-powered generated apps, optional and disabled by default). All keys live as Convex
 env vars on **your** deployment — none are committed, and generated apps never contain them.
 
 ## Honest caveats
 
-- The Convex functions are unauthenticated by design (single-user app) — anyone with your
-  deployment URL could create builds on your accounts. Keep the URL to yourself or add auth.
-- The `/ai/*` gateway proxy is public for the same reason; rotate your `vck_` key if needed.
+- The Convex functions are single-user by design. Set `RILABLE_ACCESS_TOKEN` on your Convex
+  deployment and the matching `AppConfig.accessToken` in the iOS app before attaching real API
+  keys. Leaving it empty is only reasonable for local/no-key experiments.
+- The `/ai/*` gateway proxy is disabled by default unless you set
+  `RILABLE_ALLOW_PUBLIC_AI_PROXY=true`, or call it with `x-rilable-access-token` after
+  configuring `RILABLE_ACCESS_TOKEN`. Treat public mode as a disposable demo switch.
 - Web preview URLs are public links (that's what makes sharing work).
 - The UI is a loving clone of Lovable's mobile app for personal use — if you ship this
   somewhere serious, re-skin it.
