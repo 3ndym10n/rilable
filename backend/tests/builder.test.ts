@@ -35,6 +35,14 @@ test("ProjectOps/agile prompts render a useful software delivery board instead o
   assert.match(output, /function recommendNextTask/);
   assert.match(output, /function detectSideQuests/);
   assert.match(output, /<form id="work-item-form"/);
+  assert.match(output, /function editWorkItem/);
+  assert.match(output, /function deleteWorkItem/);
+  assert.match(output, /function moveWorkItem/);
+  assert.match(output, /id="status-filter"/);
+  assert.match(output, /Recommendation rationale:/);
+  assert.match(output, /Side-quest warning:/);
+  assert.match(output, /Native Android rewrite/);
+  assert.doesNotMatch(output, /Connect Cogitator memory graph/);
   assert.match(output, /data-view="board"/);
   assert.doesNotMatch(output, /P6-style schedule/i);
 });

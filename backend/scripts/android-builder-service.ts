@@ -45,11 +45,11 @@ function requireToken(req: IncomingMessage): boolean {
   return req.headers.authorization === `Bearer ${token}`;
 }
 
-function artifactRoot(): string {
-  return resolve(process.env.FORGE_ANDROID_APK_ARTIFACT_DIR ?? "/tmp/forge-android-apks");
+export function artifactRoot(): string {
+  return resolve(process.env.FORGE_ANDROID_APK_ARTIFACT_DIR ?? "/home/v0id/.hermes/run/forge-android-apks");
 }
 
-function publicBaseUrl(req: IncomingMessage): string {
+export function publicBaseUrl(req: Pick<IncomingMessage, "headers">): string {
   const configured = process.env.FORGE_ANDROID_APK_BUILDER_PUBLIC_BASE_URL;
   if (configured) return configured.replace(/\/+$/, "");
   const host = req.headers.host ?? `127.0.0.1:${process.env.PORT ?? "8787"}`;
@@ -131,7 +131,9 @@ async function main(): Promise<void> {
   });
 }
 
-main().catch((err) => {
-  console.error(err instanceof Error ? err.message : String(err));
-  process.exit(1);
-});
+if (process.argv[1]?.endsWith("android-builder-service.ts")) {
+  main().catch((err) => {
+    console.error(err instanceof Error ? err.message : String(err));
+    process.exit(1);
+  });
+}

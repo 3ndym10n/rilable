@@ -127,4 +127,18 @@ final class ProjectViewModel: ObservableObject {
                 .mutation("projects:retry", with: ConvexService.authArgs(["id": projectId]))
         }
     }
+
+    func exportAndroidApk() async -> Bool {
+        do {
+            try await ConvexService.shared.client
+                .mutation("messages:send", with: ConvexService.authArgs([
+                    "projectId": projectId,
+                    "content": "Export Android APK",
+                ]))
+            return true
+        } catch {
+            print("Forge: Android APK export failed to start: \(error)")
+            return false
+        }
+    }
 }
