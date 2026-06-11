@@ -1,6 +1,6 @@
-# Rilable — agent setup guide
+# Forge — agent setup guide
 
-Rilable is an open-source iOS app that builds **live web apps and native iOS apps from a
+Forge is an open-source iOS app that builds **live web apps and native iOS apps from a
 prompt** — a Lovable/Replit-mobile-style builder you run on your own accounts. SwiftUI front
 end, Convex backend, Claude for code generation, Daytona cloud sandboxes for web apps, Chorus
 cloud Xcode builds for iOS apps.

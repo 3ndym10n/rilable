@@ -275,7 +275,7 @@ async function chorusJson<T>(
 function bundleIdFor(name: string, projectId: string): string {
   const slug =
     name.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 20) || "app";
-  return `com.rilable.app.${slug}${projectId.slice(-6).toLowerCase()}`;
+  return `com.forge.app.${slug}${projectId.slice(-6).toLowerCase()}`;
 }
 
 async function zipMobileProject(
@@ -435,13 +435,13 @@ const DESIGN_RULES = `RULES:
 - Everything must WORK. Every button does something real. No placeholders, no dead links, no TODOs, no console errors.
 - Keep the whole app under ~700 lines total.`;
 
-const GENERATE_SYSTEM = `You are Rilable, an elite web-app builder. You produce complete, beautiful, fully-working single-page web apps from a short request.
+const GENERATE_SYSTEM = `You are Forge, an elite web-app builder. You produce complete, beautiful, fully-working single-page web apps from a short request.
 
 ${OUTPUT_FORMAT}
 
 ${DESIGN_RULES}`;
 
-const EDIT_SYSTEM = `You are Rilable, an elite web-app builder. You are updating an existing app. You receive the app's current files, recent conversation, and a change request. Re-output the ENTIRE app — every file in full, including unchanged files. Files you omit will be DELETED. Keep the existing APP_NAME and APP_EMOJI unless the user asks to change them; SUMMARY should describe what you changed.
+const EDIT_SYSTEM = `You are Forge, an elite web-app builder. You are updating an existing app. You receive the app's current files, recent conversation, and a change request. Re-output the ENTIRE app — every file in full, including unchanged files. Files you omit will be DELETED. Keep the existing APP_NAME and APP_EMOJI unless the user asks to change them; SUMMARY should describe what you changed.
 
 ${OUTPUT_FORMAT}
 
@@ -471,19 +471,19 @@ const MOBILE_RULES = `RULES:
 - Everything must WORK. Every button does something real. No placeholders, no TODOs.
 - Keep the whole app under ~600 lines total.`;
 
-const MOBILE_GENERATE_SYSTEM = `You are Rilable, an elite iOS engineer. You produce complete, beautiful, fully-working SwiftUI apps from a short request.
+const MOBILE_GENERATE_SYSTEM = `You are Forge, an elite iOS engineer. You produce complete, beautiful, fully-working SwiftUI apps from a short request.
 
 ${MOBILE_OUTPUT_FORMAT}
 
 ${MOBILE_RULES}`;
 
-const MOBILE_EDIT_SYSTEM = `You are Rilable, an elite iOS engineer. You are updating an existing SwiftUI app. You receive the app's current files, recent conversation, and a change request. Re-output the ENTIRE app — every file in full, including unchanged files. Files you omit will be DELETED. Keep the existing APP_NAME and APP_EMOJI unless the user asks to change them; SUMMARY should describe what you changed.
+const MOBILE_EDIT_SYSTEM = `You are Forge, an elite iOS engineer. You are updating an existing SwiftUI app. You receive the app's current files, recent conversation, and a change request. Re-output the ENTIRE app — every file in full, including unchanged files. Files you omit will be DELETED. Keep the existing APP_NAME and APP_EMOJI unless the user asks to change them; SUMMARY should describe what you changed.
 
 ${MOBILE_OUTPUT_FORMAT}
 
 ${MOBILE_RULES}`;
 
-const MOBILE_FIX_SYSTEM = `You are Rilable, an elite iOS engineer. The SwiftUI app below FAILED to compile. Fix every compiler error and re-output the ENTIRE app — every file in full, including unchanged files. Do not change the app's design or features beyond what the fixes require. Keep the existing APP_NAME and APP_EMOJI; SUMMARY should stay a description of the app (not the fix).
+const MOBILE_FIX_SYSTEM = `You are Forge, an elite iOS engineer. The SwiftUI app below FAILED to compile. Fix every compiler error and re-output the ENTIRE app — every file in full, including unchanged files. Do not change the app's design or features beyond what the fixes require. Keep the existing APP_NAME and APP_EMOJI; SUMMARY should stay a description of the app (not the fix).
 
 ${MOBILE_OUTPUT_FORMAT}
 
@@ -523,7 +523,116 @@ AI SKILL — every app you build has FREE access to a built-in AI endpoint (auth
 - Calls to THIS endpoint are allowed and encouraged (the avoid-network-calls rule does not apply to it). Show a loading state while waiting; handle failures with a friendly message.`;
 }
 
+export const BUILDER_PROVIDER_ENV = "RILABLE_BUILDER_PROVIDER";
+
+function builderProvider(): "anthropic" | "poc-template" {
+  const value = (process.env[BUILDER_PROVIDER_ENV] ?? "anthropic").toLowerCase().trim();
+  if (["poc-template", "template", "zero-cost"].includes(value)) return "poc-template";
+  return "anthropic";
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function titleFromPrompt(prompt: string): string {
+  const words = prompt
+    .replace(/[^a-z0-9\s-]/gi, " ")
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 3);
+  if (words.length === 0) return "POC App";
+  return words.map((w) => w[0]?.toUpperCase() + w.slice(1).toLowerCase()).join(" ").slice(0, 18);
+}
+
+export function renderPocTemplate(user: string): string {
+  const prompt = user.replace(/^Build this web app:\s*/i, "").trim() || "a useful tiny app";
+  const safePrompt = escapeHtml(prompt);
+  const appName = titleFromPrompt(prompt);
+  return `APP_NAME: ${appName}
+APP_EMOJI: ⚡
+SUMMARY: Zero-cost POC template generated from the prompt.
+===FILE: index.html===
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>${escapeHtml(appName)}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <p class="eyebrow">Forge zero-cost POC</p>
+      <h1>${escapeHtml(appName)}</h1>
+      <p class="prompt">${safePrompt}</p>
+      <div class="actions">
+        <button id="primary">Try it</button>
+        <button id="save">Save note</button>
+      </div>
+    </section>
+    <section class="panel">
+      <h2>What works</h2>
+      <ul id="checks">
+        <li>Convex created the project</li>
+        <li>Daytona hosted this preview</li>
+        <li>Frontend JS is interactive</li>
+      </ul>
+      <textarea id="note" placeholder="Type a quick note…"></textarea>
+      <p id="status">Ready.</p>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
+===END FILE===
+===FILE: style.css===
+:root { color-scheme: dark; font-family: Inter, system-ui, sans-serif; }
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; background: radial-gradient(circle at top left, #7c3aed55, transparent 32rem), linear-gradient(135deg, #050816, #101827 55%, #020617); color: white; }
+.shell { min-height: 100vh; display: grid; gap: 1rem; padding: max(2rem, env(safe-area-inset-top)) 1rem 2rem; align-content: center; max-width: 920px; margin: 0 auto; }
+.hero, .panel { border: 1px solid #ffffff1f; background: #ffffff12; border-radius: 28px; padding: 1.25rem; box-shadow: 0 24px 80px #0008; backdrop-filter: blur(18px); }
+.eyebrow { color: #a78bfa; text-transform: uppercase; letter-spacing: .12em; font-size: .75rem; font-weight: 900; }
+h1 { font-size: clamp(2.3rem, 12vw, 5.5rem); line-height: .88; margin: .25rem 0 1rem; letter-spacing: -.08em; }
+.prompt { color: #dbeafe; font-size: 1.1rem; line-height: 1.5; }
+.actions { display: flex; gap: .75rem; flex-wrap: wrap; margin-top: 1.25rem; }
+button { border: 0; border-radius: 999px; padding: .95rem 1.2rem; font-weight: 900; color: white; background: #7c3aed; box-shadow: 0 12px 30px #7c3aed66; }
+button:last-child { background: #ffffff1f; box-shadow: none; }
+button:active { transform: translateY(1px) scale(.99); }
+.panel h2 { margin-top: 0; }
+li { margin: .6rem 0; color: #dcfce7; }
+textarea { width: 100%; min-height: 110px; border: 1px solid #ffffff24; border-radius: 18px; background: #02061799; color: white; padding: 1rem; font: inherit; resize: vertical; }
+#status { color: #bae6fd; font-weight: 700; }
+@media (min-width: 760px) { .shell { grid-template-columns: 1.2fr .8fr; } }
+===END FILE===
+===FILE: app.js===
+const statusEl = document.querySelector('#status');
+const noteEl = document.querySelector('#note');
+document.querySelector('#primary').addEventListener('click', () => {
+  const count = Number(localStorage.getItem('forge-poc-clicks') || '0') + 1;
+  localStorage.setItem('forge-poc-clicks', String(count));
+  statusEl.textContent = 'Button works. Click count: ' + count + '.';
+});
+document.querySelector('#save').addEventListener('click', () => {
+  localStorage.setItem('forge-poc-note', noteEl.value.trim());
+  statusEl.textContent = noteEl.value.trim() ? 'Saved locally.' : 'Nothing to save yet.';
+});
+noteEl.value = localStorage.getItem('forge-poc-note') || '';
+===END FILE===`;
+}
+
 async function callClaude(system: string, user: string, model: string): Promise<string> {
+  if (builderProvider() === "poc-template") return renderPocTemplate(user);
+
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) throw new Error("ANTHROPIC_API_KEY is not set on the Convex deployment");
   const res = await fetch("https://api.anthropic.com/v1/messages", {

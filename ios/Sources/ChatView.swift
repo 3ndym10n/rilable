@@ -345,7 +345,7 @@ struct ChatView: View {
             TextField(
                 "",
                 text: $draft,
-                prompt: Text(busy ? "Queue follow-up…" : "Ask Rilable…")
+                prompt: Text(busy ? "Queue follow-up…" : "Ask Forge…")
                     .foregroundStyle(Theme.textSecondary),
                 axis: .vertical
             )
