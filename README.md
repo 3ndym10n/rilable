@@ -1,4 +1,4 @@
-# Rilable
+# Forge
 
 **An open-source iPhone app that builds apps.** Type a prompt → an AI agent writes the code →
 it goes live in the cloud → you preview it right inside the app. Web apps run in
@@ -44,7 +44,7 @@ Prefer to do it by hand? `CLAUDE.md` reads just as well for humans.
 
 ## Keys you'll need
 
-Anthropic (required) · Daytona (web builds) · Rilable access token (recommended before adding real keys) · Chorus (mobile builds) · OpenAI (voice,
+Anthropic (required) · Daytona (web builds) · Forge access token (recommended before adding real keys) · Chorus (mobile builds) · OpenAI (voice,
 optional) · Vercel AI Gateway (AI-powered generated apps, optional and disabled by default). All keys live as Convex
 env vars on **your** deployment — none are committed, and generated apps never contain them.
 
@@ -56,8 +56,9 @@ env vars on **your** deployment — none are committed, and generated apps never
 - The `/ai/*` gateway proxy is disabled by default unless you set
   `RILABLE_ALLOW_PUBLIC_AI_PROXY=true`, or call it with `x-rilable-access-token` after
   configuring `RILABLE_ACCESS_TOKEN`. Treat public mode as a disposable demo switch.
+- Android APK export needs a reachable builder service. Run `npm run android:builder` somewhere with the Android toolchain and set `FORGE_ANDROID_APK_BUILDER_URL` on Convex to its `/build` endpoint; use `FORGE_ANDROID_APK_BUILDER_TOKEN` on both sides if exposed beyond a trusted network.
 - Web preview URLs are public links (that's what makes sharing work).
-- The UI is a loving clone of Lovable's mobile app for personal use — if you ship this
+- The UI is an intentionally familiar mobile app-builder shell; if you ship this
   somewhere serious, re-skin it.
 
 ## License

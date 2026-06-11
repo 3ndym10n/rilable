@@ -8,6 +8,7 @@ import {
 import { internal } from "./_generated/api";
 import { isAllowedModel } from "./models";
 import { requireAccessToken } from "./auth";
+import { wantsAndroidApk } from "./android";
 
 const messageShape = v.object({
   _id: v.id("messages"),
@@ -72,7 +73,14 @@ export const send = mutation({
       await ctx.db.patch(projectId, { model });
     }
     await ctx.db.insert("messages", { projectId, role: "user", content });
-    if (project.platform === "mobile" && wantsInstallLink(content)) {
+    if (project.platform !== "mobile" && wantsAndroidApk(content)) {
+      await ctx.db.patch(projectId, {
+        status: "building",
+        statusDetail: "Building Android APK",
+        updatedAt: Date.now(),
+      });
+      await ctx.scheduler.runAfter(0, internal.builder.buildAndroidApk, { projectId });
+    } else if (project.platform === "mobile" && wantsInstallLink(content)) {
       await ctx.db.patch(projectId, {
         status: "signing",
         statusDetail: "Preparing your install link",
