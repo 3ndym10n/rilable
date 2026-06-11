@@ -557,6 +557,136 @@ function isProjectOpsPrompt(prompt: string): boolean {
     /\b(agile|kanban|backlog|sprint|blocked|blockers|risks|dependencies|owners?|next actions?|recommendations?|software)\b/.test(t);
 }
 
+
+function isVirgilDashboardPrompt(prompt: string): boolean {
+  const t = prompt.toLowerCase();
+  return /\bvirgil\b/.test(t) &&
+    /\b(tool usage|tools?|runs?|hotspots?|cto)\b/.test(t);
+}
+
+function renderVirgilDashboardTemplate(): string {
+  return `APP_NAME: VirgilDash
+APP_EMOJI: 🧭
+SUMMARY: Virgil command dashboard for active projects, tool usage, recent runs, failure hotspots, and blunt CTO recommendations.
+===FILE: index.html===
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>VirgilDash</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <p class="eyebrow">Virgil command dashboard</p>
+      <h1>Project and tool cockpit</h1>
+      <p>Active projects, blockers, tool usage, recent runs, failure hotspots, and one blunt CTO summary. Cute dashboard, actual work. Shocking.</p>
+      <div class="metrics" id="metrics"></div>
+    </header>
+    <nav class="tabs" aria-label="Dashboard views">
+      <button class="tab active" data-view="projects">Active projects</button>
+      <button class="tab" data-view="tools">Tool usage</button>
+      <button class="tab" data-view="runs">Recent runs</button>
+      <button class="tab" data-view="failures">Failure hotspots</button>
+      <button class="tab" data-view="cto">Blunt CTO summary</button>
+    </nav>
+    <section class="grid">
+      <form id="project-form" class="card form-card">
+        <h2>Add / update project</h2>
+        <input name="id" type="hidden" />
+        <input name="name" placeholder="Project name" required />
+        <input name="owner" placeholder="Owner" required />
+        <select name="status"><option>Active</option><option>Blocked</option><option>Review</option><option>Done</option><option>Parked</option></select>
+        <select name="health"><option>Green</option><option>Yellow</option><option>Red</option></select>
+        <textarea name="nextAction" placeholder="Next recommended action" required></textarea>
+        <textarea name="blocker" placeholder="Blocker / missing context"></textarea>
+        <button type="submit">Save project</button>
+      </form>
+      <form id="tool-form" class="card form-card">
+        <h2>Log tool run</h2>
+        <input name="tool" placeholder="Tool, e.g. builder, browser, terminal" required />
+        <select name="result"><option>success</option><option>failed</option><option>blocked</option></select>
+        <input name="duration" placeholder="Duration, e.g. 42s" />
+        <textarea name="note" placeholder="What happened?"></textarea>
+        <button type="submit">Log tool run</button>
+      </form>
+      <section class="card view-card">
+        <div class="quick-actions">
+          <button id="mark-done" type="button">Mark done</button>
+          <button id="add-blocker" type="button">Add blocker</button>
+          <button id="clear-successes" type="button">Clear successful runs</button>
+        </div>
+        <section id="view"></section>
+      </section>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
+===END FILE===
+===FILE: style.css===
+:root { color-scheme: dark; font-family: Inter, system-ui, sans-serif; --bg:#050816; --card:#0f172acc; --line:#ffffff18; --text:#f8fafc; --muted:#a8b3c7; --accent:#22d3ee; --good:#34d399; --warn:#fbbf24; --bad:#fb7185; --violet:#a78bfa; }
+* { box-sizing: border-box; }
+body { margin:0; min-height:100vh; background: radial-gradient(circle at 10% 0%, #0ea5e966, transparent 30rem), radial-gradient(circle at 90% 10%, #7c3aed66, transparent 28rem), linear-gradient(135deg, #020617, var(--bg)); color:var(--text); }
+.shell { width:min(1180px,100%); margin:0 auto; padding:max(1.2rem, env(safe-area-inset-top)) 1rem 2rem; }
+.hero,.card,.tabs { border:1px solid var(--line); background:var(--card); border-radius:26px; box-shadow:0 24px 90px #0008; backdrop-filter:blur(18px); }
+.hero { padding:1.2rem; } .eyebrow { color:var(--accent); text-transform:uppercase; letter-spacing:.14em; font-size:.75rem; font-weight:900; }
+h1 { font-size:clamp(2.4rem,10vw,5.6rem); line-height:.9; margin:.25rem 0 .9rem; letter-spacing:-.075em; } p { color:var(--muted); line-height:1.5; }
+.metrics { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.7rem; margin-top:1rem; } .metric { padding:.85rem; border-radius:18px; background:#ffffff10; } .metric strong { display:block; font-size:1.45rem; }
+.tabs { display:flex; gap:.5rem; padding:.45rem; margin:1rem 0; overflow-x:auto; } button,input,select,textarea { font:inherit; }
+button { border:0; border-radius:999px; padding:.85rem 1rem; color:var(--text); background:#ffffff14; font-weight:900; } button.active, form button { background:linear-gradient(135deg,#2563eb,#22d3ee); box-shadow:0 14px 34px #22d3ee33; }
+.grid { display:grid; gap:1rem; } .card { padding:1rem; } form { display:grid; gap:.75rem; } input,select,textarea { width:100%; border:1px solid var(--line); border-radius:16px; background:#020617aa; color:var(--text); padding:.85rem; } textarea { min-height:82px; resize:vertical; }
+.quick-actions { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1rem; } .list { display:grid; gap:.75rem; } .item { border:1px solid var(--line); background:#ffffff0e; border-radius:18px; padding:.9rem; }
+.item-head { display:flex; justify-content:space-between; gap:.7rem; align-items:start; } .pill { border-radius:999px; padding:.25rem .6rem; background:#ffffff18; font-size:.78rem; font-weight:900; } .Green,.success { color:var(--good); } .Yellow,.blocked { color:var(--warn); } .Red,.failed { color:var(--bad); } .Parked { color:var(--violet); }
+.meta { color:var(--muted); font-size:.9rem; margin-top:.42rem; } .hotspot { border-left:4px solid var(--bad); } .summary { border-left:4px solid var(--accent); }
+@media (min-width:900px){ .grid{grid-template-columns:330px 330px 1fr; align-items:start;} .metrics{grid-template-columns:repeat(4,minmax(0,1fr));} }
+===END FILE===
+===FILE: app.js===
+const STORAGE_KEY = 'forge-virgil-dashboard';
+const seed = {
+  projects: [
+    { id:'forge', name:'Forge app builder', owner:'Virgil', status:'Active', health:'Yellow', nextAction:'Prove real prompt to preview to APK export loop', blocker:'Durable service supervision still thin' },
+    { id:'apk', name:'Android APK builder', owner:'Virgil', status:'Review', health:'Green', nextAction:'Keep artifact links phone-openable and token-gate builds', blocker:'' },
+    { id:'cogitator', name:'Cogitator restraint engine', owner:'Cal + Virgil', status:'Parked', health:'Yellow', nextAction:'Stand down unless retrieval/recommendation fails in real use', blocker:'Raccoon risk: overbuilding memory sludge' }
+  ],
+  runs: [
+    { id:'run-1', tool:'android-builder', result:'success', duration:'73s', note:'Built installable WebView APK' },
+    { id:'run-2', tool:'browser-preview', result:'failed', duration:'8s', note:'Sandbox proxy returned dead container earlier' },
+    { id:'run-3', tool:'convex', result:'success', duration:'12s', note:'Created Forge project and preview URL' }
+  ]
+};
+let state = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || seed;
+let view = 'projects';
+const metricsEl = document.querySelector('#metrics');
+const viewEl = document.querySelector('#view');
+const projectForm = document.querySelector('#project-form');
+const toolForm = document.querySelector('#tool-form');
+function save(){ localStorage.setItem('forge-virgil-dashboard', JSON.stringify(state)); }
+function esc(v){ return String(v || '').replace(/[&<>\"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c])); }
+function renderMetrics(){ const active=state.projects.filter(p=>p.status!=='Done'&&p.status!=='Parked').length; const blocked=state.projects.filter(p=>p.status==='Blocked'||p.blocker).length; const failures=state.runs.filter(r=>r.result!=='success').length; const tools=new Set(state.runs.map(r=>r.tool)).size; metricsEl.innerHTML=[['Active projects',active],['Blockers',blocked],['Tool usage',tools],['Failed runs',failures]].map(([label,value])=>'<div class="metric"><strong>'+value+'</strong>'+label+'</div>').join(''); }
+function projectCard(p){ return '<article class="item"><div class="item-head"><strong>'+esc(p.name)+'</strong><span class="pill '+esc(p.health)+'">'+esc(p.health)+'</span></div><p>'+esc(p.nextAction)+'</p><div class="meta">Owner: '+esc(p.owner)+' · Status: '+esc(p.status)+'</div><div class="meta">Blocker: '+esc(p.blocker || 'none')+'</div></article>'; }
+function runCard(r){ return '<article class="item"><div class="item-head"><strong>'+esc(r.tool)+'</strong><span class="pill '+esc(r.result)+'">'+esc(r.result)+'</span></div><p>'+esc(r.note || 'No note')+'</p><div class="meta">Duration: '+esc(r.duration || 'n/a')+'</div></article>'; }
+function renderProjects(){ viewEl.innerHTML='<h2>Active projects</h2><section class="list">'+state.projects.map(projectCard).join('')+'</section>'; }
+function renderToolUsage(){ const counts={}; state.runs.forEach(r=>counts[r.tool]=(counts[r.tool]||0)+1); viewEl.innerHTML='<h2>Tool usage</h2><section class="list">'+Object.entries(counts).map(([tool,count])=>'<article class="item"><strong>'+esc(tool)+'</strong><p>'+count+' logged run'+(count===1?'':'s')+'</p></article>').join('')+'</section>'; }
+function renderRecentRuns(){ viewEl.innerHTML='<h2>Recent runs</h2><section class="list">'+state.runs.slice().reverse().map(runCard).join('')+'</section>'; }
+function renderFailureHotspots(){ const fails=state.runs.filter(r=>r.result!=='success'); viewEl.innerHTML='<h2>Failure hotspots</h2><section class="list">'+(fails.length?fails.map(r=>'<article class="item hotspot"><strong>'+esc(r.tool)+'</strong><p>'+esc(r.note)+'</p></article>').join(''):'<p>No hotspots. Suspiciously civilized.</p>')+'</section>'; }
+function renderCtoSummary(){ const next=state.projects.find(p=>p.status==='Active'||p.status==='Blocked') || state.projects[0]; const failures=state.runs.filter(r=>r.result!=='success').length; viewEl.innerHTML='<h2>Blunt CTO summary</h2><article class="item summary"><p>Next recommended action: '+esc(next ? next.nextAction : 'Pick one real project and stop admiring the machinery.')+'</p><p>'+failures+' recent failure hotspot'+(failures===1?'':'s')+'. Fix the conveyor belt before decorating the dashboard goblin.</p></article>'; }
+function render(){ renderMetrics(); if(view==='projects') renderProjects(); if(view==='tools') renderToolUsage(); if(view==='runs') renderRecentRuns(); if(view==='failures') renderFailureHotspots(); if(view==='cto') renderCtoSummary(); }
+projectForm.addEventListener('submit', e=>{ e.preventDefault(); const data=Object.fromEntries(new FormData(projectForm)); data.id=data.id||'project-'+Date.now(); const i=state.projects.findIndex(p=>p.id===data.id||p.name.toLowerCase()===data.name.toLowerCase()); if(i>=0) state.projects[i]=data; else state.projects.unshift(data); save(); projectForm.reset(); render(); });
+toolForm.addEventListener('submit', e=>{ e.preventDefault(); const data=Object.fromEntries(new FormData(toolForm)); data.id='run-'+Date.now(); state.runs.push(data); save(); toolForm.reset(); render(); });
+document.querySelector('#mark-done').addEventListener('click',()=>{ const p=state.projects.find(p=>p.status==='Active'||p.status==='Review'); if(p) p.status='Done'; save(); render(); });
+document.querySelector('#add-blocker').addEventListener('click',()=>{ const p=state.projects.find(p=>p.status!=='Done'); if(p){ p.status='Blocked'; p.blocker=p.blocker||'Needs Cal decision or missing runtime proof'; p.health='Red'; } save(); render(); });
+document.querySelector('#clear-successes').addEventListener('click',()=>{ state.runs=state.runs.filter(r=>r.result!=='success'); save(); render(); });
+document.querySelectorAll('.tab').forEach(btn=>btn.addEventListener('click',()=>{ document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); view=btn.dataset.view; render(); }));
+render();
+===END FILE===`;
+}
+
 function renderProjectOpsTemplate(): string {
   return [
     "APP_NAME: ProjectOps",
@@ -727,6 +857,7 @@ function renderProjectOpsTemplate(): string {
 
 export function renderPocTemplate(user: string): string {
   const prompt = user.replace(/^Build this web app:\s*/i, "").trim() || "a useful tiny app";
+  if (isVirgilDashboardPrompt(prompt)) return renderVirgilDashboardTemplate();
   if (isProjectOpsPrompt(prompt)) return renderProjectOpsTemplate();
   const safePrompt = escapeHtml(prompt);
   const appName = titleFromPrompt(prompt);

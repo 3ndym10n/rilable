@@ -15,6 +15,30 @@ test("POC template renders parseable static app files without external LLM", () 
   assert.doesNotMatch(output, /<script>alert\('x'\)<\/script>/);
 });
 
+test("Virgil dashboard prompts render project and tool usage command surface", () => {
+  const output = renderPocTemplate(
+    "Build a Virgil dashboard for projects and tool usage. Show active projects, status, blockers, next recommended action, tool usage metrics, recent runs, failure hotspots, and a blunt CTO summary."
+  );
+
+  assert.match(output, /^APP_NAME: VirgilDash$/m);
+  assert.match(output, /^APP_EMOJI: 🧭$/m);
+  assert.match(output, /Virgil command dashboard/i);
+  assert.match(output, /Tool usage/i);
+  assert.match(output, /Recent runs/i);
+  assert.match(output, /Failure hotspots/i);
+  assert.match(output, /Blunt CTO summary/i);
+  assert.match(output, /Active projects/i);
+  assert.match(output, /Log tool run/i);
+  assert.match(output, /Add blocker/i);
+  assert.match(output, /Mark done/i);
+  assert.match(output, /localStorage\.setItem\('forge-virgil-dashboard'/);
+  assert.match(output, /function renderToolUsage/);
+  assert.match(output, /function renderRecentRuns/);
+  assert.match(output, /function renderFailureHotspots/);
+  assert.match(output, /function renderCtoSummary/);
+  assert.doesNotMatch(output, /ProjectOps is live/i);
+});
+
 test("ProjectOps/agile prompts render a useful software delivery board instead of a P6 shell", () => {
   const output = renderPocTemplate(
     "Build a project dashboard app for Virgil software work with agile backlog, kanban board, sprint focus, blockers, risks, dependencies, owners, and AI project manager recommendations"
