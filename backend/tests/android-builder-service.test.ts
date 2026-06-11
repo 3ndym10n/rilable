@@ -54,6 +54,13 @@ test("builder service requires bearer token and serves APK artifacts", async () 
     assert.equal(artifactRes.status, 200);
     assert.equal(artifactRes.headers.get("content-type"), "application/vnd.android.package-archive");
     assert.equal((await readFile(artifact)).byteLength, (await stat(artifact)).size);
+
+    const demoRes = await fetch(`${base}/demo/stopwatch`);
+    assert.equal(demoRes.status, 200);
+    assert.match(demoRes.headers.get("content-type") ?? "", /text\/html/);
+    const demoHtml = await demoRes.text();
+    assert.match(demoHtml, /Forge Stopwatch/);
+    assert.doesNotMatch(demoHtml, /example\.com/);
   } finally {
     await new Promise<void>((resolve) => server.close(() => resolve()));
     if (oldDir === undefined) delete process.env.FORGE_ANDROID_APK_ARTIFACT_DIR;

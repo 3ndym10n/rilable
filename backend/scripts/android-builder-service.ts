@@ -23,6 +23,67 @@ function json(res: ServerResponse, status: number, body: unknown): void {
   res.end(text);
 }
 
+function html(res: ServerResponse, body: string): void {
+  res.writeHead(200, {
+    "Content-Type": "text/html; charset=utf-8",
+    "Content-Length": Buffer.byteLength(body),
+  });
+  res.end(body);
+}
+
+function demoStopwatchHtml(): string {
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Forge Stopwatch</title>
+  <style>
+    :root { color-scheme: dark; font-family: Inter, system-ui, sans-serif; }
+    body { margin:0; min-height:100vh; display:grid; place-items:center; background:linear-gradient(135deg,#111827,#312e81); color:white; }
+    main { width:min(34rem, calc(100vw - 2rem)); padding:2rem; border:1px solid rgba(255,255,255,.18); border-radius:28px; background:rgba(17,24,39,.72); box-shadow:0 24px 80px rgba(0,0,0,.35); text-align:center; }
+    h1 { margin:0 0 .5rem; font-size:2rem; }
+    p { margin:.25rem 0 1.5rem; color:#c7d2fe; }
+    #time { font-variant-numeric:tabular-nums; font-size:4rem; font-weight:800; letter-spacing:.04em; margin:1.5rem 0; }
+    .buttons { display:flex; gap:.75rem; justify-content:center; flex-wrap:wrap; }
+    button { border:0; border-radius:999px; padding:.9rem 1.2rem; font-weight:800; color:#111827; background:#a7f3d0; }
+    button.secondary { background:#bfdbfe; }
+    button.danger { background:#fecaca; }
+    footer { margin-top:1.5rem; color:#9ca3af; font-size:.85rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Forge Stopwatch</h1>
+    <p>Real APK wrapper smoke test. Placeholder page removed. Tiny mercy.</p>
+    <div id="time">00:00.0</div>
+    <div class="buttons">
+      <button id="start">Start</button>
+      <button id="stop" class="secondary">Stop</button>
+      <button id="reset" class="danger">Reset</button>
+    </div>
+    <footer>Served from the Virgil builder and wrapped by Capacitor.</footer>
+  </main>
+  <script>
+    let startedAt = 0, elapsed = 0, timer = null;
+    const time = document.getElementById('time');
+    function render(ms) {
+      const totalTenths = Math.floor(ms / 100);
+      const tenths = totalTenths % 10;
+      const seconds = Math.floor(totalTenths / 10) % 60;
+      const minutes = Math.floor(totalTenths / 600);
+      time.textContent = String(minutes).padStart(2,'0') + ':' + String(seconds).padStart(2,'0') + '.' + tenths;
+    }
+    function tick() { render(elapsed + Date.now() - startedAt); }
+    document.getElementById('start').onclick = () => { if (timer) return; startedAt = Date.now(); timer = setInterval(tick, 50); tick(); };
+    document.getElementById('stop').onclick = () => { if (!timer) return; elapsed += Date.now() - startedAt; clearInterval(timer); timer = null; render(elapsed); };
+    document.getElementById('reset').onclick = () => { elapsed = 0; startedAt = Date.now(); render(0); };
+    render(0);
+  </script>
+</body>
+</html>`;
+}
+
 function collectBody(req: IncomingMessage): Promise<string> {
   return new Promise((resolveBody, reject) => {
     let body = "";
@@ -115,6 +176,7 @@ export function createAndroidBuilderServer() {
       .then(async () => {
         if (req.method === "POST" && req.url === "/build") return await handleBuild(req, res);
         if (req.method === "GET" && req.url?.startsWith("/artifacts/")) return await handleArtifact(req, res);
+        if (req.method === "GET" && req.url === "/demo/stopwatch") return html(res, demoStopwatchHtml());
         if (req.method === "GET" && req.url === "/health") return json(res, 200, { ok: true });
         return json(res, 404, { error: "Not found" });
       })

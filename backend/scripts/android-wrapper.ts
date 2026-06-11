@@ -176,11 +176,20 @@ async function writeWorkspace(root: string, workspace: AndroidWrapperWorkspace):
 
 function run(command: string, args: string[], cwd: string, env: NodeJS.ProcessEnv = process.env): Promise<void> {
   return new Promise((resolveRun, reject) => {
-    const child = spawn(command, args, { cwd, env, stdio: "inherit", shell: false });
+    const child = spawn(command, args, { cwd, env, stdio: ["ignore", "pipe", "pipe"], shell: false });
+    let output = "";
+    const collect = (chunk: Buffer) => {
+      const text = chunk.toString();
+      output += text;
+      if (output.length > 24_000) output = output.slice(-24_000);
+      process.stdout.write(text);
+    };
+    child.stdout?.on("data", collect);
+    child.stderr?.on("data", collect);
     child.on("error", reject);
     child.on("exit", (code) => {
       if (code === 0) resolveRun();
-      else reject(new Error(`${command} ${args.join(" ")} failed with exit code ${code}`));
+      else reject(new Error(`${command} ${args.join(" ")} failed with exit code ${code}\n${output.trim()}`));
     });
   });
 }
