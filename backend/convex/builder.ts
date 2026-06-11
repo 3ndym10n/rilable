@@ -8,6 +8,7 @@ import type { Id } from "./_generated/dataModel";
 import JSZip from "jszip";
 import { resolveModel } from "./models";
 import { isPublicAiProxyAllowed } from "./auth";
+import { androidApkBuildSpec } from "./android";
 import {
   renderPbxproj,
   XCSCHEME,
@@ -998,6 +999,108 @@ export const ensureRunning = internalAction({
         status: "live",
         statusDetail: "Preview may be sleeping — try again",
       });
+    }
+    return null;
+  },
+});
+
+type AndroidApkBuilderResponse = {
+  downloadUrl?: string;
+  apkUrl?: string;
+  artifactUrl?: string;
+  url?: string;
+};
+
+async function callAndroidApkBuilder(spec: {
+  projectId: string;
+  appName: string;
+  packageId: string;
+  previewUrl: string;
+  artifactName: string;
+}): Promise<string> {
+  const endpoint = process.env.FORGE_ANDROID_APK_BUILDER_URL;
+  if (!endpoint) {
+    throw new Error("FORGE_ANDROID_APK_BUILDER_URL is not set on the Convex deployment");
+  }
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  const token = process.env.FORGE_ANDROID_APK_BUILDER_TOKEN;
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(endpoint, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(spec),
+    signal: AbortSignal.timeout(540_000),
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`Android APK builder failed (${res.status}): ${body.slice(0, 300)}`);
+  }
+  const data = (await res.json()) as AndroidApkBuilderResponse;
+  const url = data.downloadUrl ?? data.apkUrl ?? data.artifactUrl ?? data.url;
+  if (!url) throw new Error("Android APK builder response did not include a download URL");
+  return url;
+}
+
+export const buildAndroidApk = internalAction({
+  args: { projectId: v.id("projects") },
+  returns: v.null(),
+  handler: async (ctx, { projectId }) => {
+    const project = await ctx.runQuery(internal.projects.getInternal, { id: projectId });
+    if (!project) return null;
+    try {
+      if (project.platform === "mobile") {
+        throw new Error("Android APK export is only available for web projects right now");
+      }
+      if (!project.previewUrl) {
+        throw new Error("No live preview URL yet — build the web app first");
+      }
+
+      let previewUrl = project.previewUrl;
+      if (project.sandboxId) {
+        const sb = await getSandbox(project.sandboxId).catch(() => null);
+        if (!sb || ["destroyed", "error", "build_failed"].includes(sb.state)) {
+          throw new Error("The Daytona sandbox is gone — rebuild the web app first");
+        }
+        if (sb.state !== "started") {
+          await setStatus(ctx, projectId, "waking", "Waking your app before APK export");
+          await log(ctx, projectId, "☀️ Waking the sandbox before Android export…");
+          if (sb.state === "stopping") {
+            await waitForSandboxState(project.sandboxId, "stopped", 60_000);
+          }
+          await startSandbox(project.sandboxId);
+        }
+        await startStaticServer(project.sandboxId);
+        previewUrl = await getPreviewUrl(project.sandboxId);
+        if (previewUrl !== project.previewUrl) {
+          await ctx.runMutation(internal.projects.update, { id: projectId, previewUrl });
+        }
+      }
+      await waitForPreview(previewUrl);
+
+      const spec = androidApkBuildSpec({
+        projectId,
+        name: project.name,
+        previewUrl,
+      });
+      await setStatus(ctx, projectId, "building", "Building Android APK");
+      await log(ctx, projectId, `📱 Building Android APK (${spec.packageId})…`);
+      const apkUrl = await callAndroidApkBuilder({ projectId, ...spec });
+      await ctx.runMutation(internal.projects.update, {
+        id: projectId,
+        status: "live",
+        statusDetail: "Live",
+        installUrl: apkUrl,
+        clearError: true,
+      });
+      await log(ctx, projectId, `✅ Android APK is ready: ${apkUrl}`, "agent");
+    } catch (err) {
+      await ctx.runMutation(internal.projects.update, {
+        id: projectId,
+        status: project.previewUrl ? "live" : "error",
+        statusDetail: project.previewUrl ? "Live (Android APK failed)" : "Android APK failed",
+        error: errorMessage(err),
+      });
+      await log(ctx, projectId, `❌ Android APK failed: ${errorMessage(err)}`, "agent");
     }
     return null;
   },

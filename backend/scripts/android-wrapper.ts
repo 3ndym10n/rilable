@@ -237,7 +237,7 @@ async function main(): Promise<void> {
   console.log(JSON.stringify(result, null, 2));
 }
 
-if (process.argv[1] && import.meta.url === new URL(`file://${process.argv[1]}`).href) {
+if (process.argv[1]?.endsWith("android-wrapper.ts")) {
   main().catch((err) => {
     console.error(err instanceof Error ? err.message : String(err));
     process.exit(1);

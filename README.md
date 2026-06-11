@@ -56,8 +56,9 @@ env vars on **your** deployment — none are committed, and generated apps never
 - The `/ai/*` gateway proxy is disabled by default unless you set
   `RILABLE_ALLOW_PUBLIC_AI_PROXY=true`, or call it with `x-rilable-access-token` after
   configuring `RILABLE_ACCESS_TOKEN`. Treat public mode as a disposable demo switch.
+- Android APK export needs a reachable builder service. Run `npm run android:builder` somewhere with the Android toolchain and set `FORGE_ANDROID_APK_BUILDER_URL` on Convex to its `/build` endpoint; use `FORGE_ANDROID_APK_BUILDER_TOKEN` on both sides if exposed beyond a trusted network.
 - Web preview URLs are public links (that's what makes sharing work).
-- The UI is an intentionally familiar mobile app-builder shell of Lovable's mobile app for personal use — if you ship this
+- The UI is an intentionally familiar mobile app-builder shell; if you ship this
   somewhere serious, re-skin it.
 
 ## License

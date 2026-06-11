@@ -5,7 +5,8 @@
   "scripts": {
     "test": "node --import tsx --test tests/*.test.ts",
     "typecheck": "tsc --noEmit -p convex/tsconfig.json",
-    "android:wrap": "tsx scripts/android-wrapper.ts"
+    "android:wrap": "tsx scripts/android-wrapper.ts",
+    "android:builder": "tsx scripts/android-builder-service.ts"
   },
   "dependencies": {
     "convex": "^1.27.0",

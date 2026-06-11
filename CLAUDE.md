@@ -61,6 +61,8 @@ Ask the user for these one at a time, then set each with
 | `CHORUS_USER_ID` | printed by the Chorus CLI after login (also in `~/.vibecode/ios/config.json` as `userId`) | device-install signing | Mobile installs |
 | `OPENAI_API_KEY` | platform.openai.com → API keys | Whisper voice input | Optional |
 | `VERCEL_AI_GATEWAY_KEY` | vercel.com dashboard → AI Gateway → API keys (starts `vck_`) | AI features inside generated apps | Optional |
+| `FORGE_ANDROID_APK_BUILDER_URL` | your APK builder service `/build` URL | Android APK export for web projects | Optional |
+| `FORGE_ANDROID_APK_BUILDER_TOKEN` | generate a long random string locally | protects APK builder calls | Recommended if APK builder is network-exposed |
 
 Minimum viable setup: `RILABLE_ACCESS_TOKEN` + `ANTHROPIC_API_KEY` + `DAYTONA_API_KEY` (web builds only). Skip any
 optional key the user doesn't want — the related feature degrades gracefully. Keep
